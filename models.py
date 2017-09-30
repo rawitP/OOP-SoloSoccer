@@ -1,6 +1,12 @@
 import math
 import arcade.key
 
+class Ball:
+    def __init__(self, x, y, angle=0):
+        self.x = x
+        self.y = y
+        self.angle = angle
+
 class Player:
     TURN_SPEED = 3
     SPEED_DEFAULT = 3
@@ -29,6 +35,7 @@ class World:
         self.width = width
         self.height = height
         self.player1 = Player(width // 2, height // 2, 0)
+        self.ball = Ball(width // 2 * 1.5, height // 2)
  
     def update(self, delta):
         self.player1.update(delta)

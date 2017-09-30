@@ -28,6 +28,7 @@ class SoccerWindow(arcade.Window):
         # Create Sprite
         self.world = World(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player1_sprite = ModelSprite('images/player1.png',model=self.world.player1)
+        self.ball_sprite = ModelSprite('images/ball.png', model=self.world.ball)
 
     def setupStadium(self):
         # Set Backgound to field
@@ -40,6 +41,7 @@ class SoccerWindow(arcade.Window):
                                       SCREEN_WIDTH, SCREEN_HEIGHT, self.backgound)
         # Draw Sprite
         self.player1_sprite.draw()
+        self.ball_sprite.draw()
 
     def update(self, delta):
         # Update Object in World 
