@@ -19,17 +19,18 @@ class Ball:
                 self.speed = 0
             self.x += math.cos(math.radians(self.angle)) * self.speed
             self.y += math.sin(math.radians(self.angle)) * self.speed
-        
 
 class Player:
     TURN_SPEED = 3
     SPEED_DEFAULT = 3
+    DEFAULT_KICK_POWER = 5
 
     def __init__(self, x, y, angle, speed=SPEED_DEFAULT):
         self.x = x
         self.y = y
         self.angle = angle
         self.speed = speed
+        self.kick_power = self.DEFAULT_KICK_POWER
         self.is_walk = False
         self.turn_direction = [False, False] # [LEFT, RIGHT]
 

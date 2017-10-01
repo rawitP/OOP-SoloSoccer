@@ -46,6 +46,11 @@ class SoccerWindow(arcade.Window):
     def update(self, delta):
         # Update Object in World 
         self.world.update(delta)
+        ### When Player1 hit the ball
+        if arcade.check_for_collision(self.ball_sprite, self.player1_sprite) :
+            self.world.ball.speed = self.world.player1.kick_power
+            self.world.ball.angle = self.world.player1.angle
+        ###
 
     def on_key_press(self, key, key_modifiers):
         self.world.on_key_press(key, key_modifiers)
