@@ -3,11 +3,14 @@ from models import World, Player
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
+TWO_PLAYER = False
 
 class ModelSprite(arcade.Sprite):
     def __init__(self, *args, **kwargs):
         self.model = kwargs.pop('model', None)
         super().__init__(*args, **kwargs)
+        ### FIX Start position at 0,0
+        self.set_position(self.model.x, self.model.y)
  
     def sync_with_model(self):
         if self.model:
@@ -29,6 +32,10 @@ class SoccerWindow(arcade.Window):
         self.world = World(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player1_sprite = ModelSprite('images/player1.png',model=self.world.player1)
         self.ball_sprite = ModelSprite('images/ball.png', model=self.world.ball)
+        ###
+        if TWO_PLAYER:
+            self.player2_sprite = ModelSprite('images/player1.png',model=self.world.player2)
+        ###
 
     def setupStadium(self):
         # Set Backgound to field
@@ -40,8 +47,12 @@ class SoccerWindow(arcade.Window):
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
                                       SCREEN_WIDTH, SCREEN_HEIGHT, self.backgound)
         # Draw Sprite
-        self.player1_sprite.draw()
         self.ball_sprite.draw()
+        self.player1_sprite.draw()
+        ###
+        if TWO_PLAYER:
+            self.player2_sprite.draw()
+        ###
 
     def update(self, delta):
         # Update Object in World 
@@ -50,6 +61,12 @@ class SoccerWindow(arcade.Window):
         if arcade.check_for_collision(self.ball_sprite, self.player1_sprite) :
             self.world.ball.speed = self.world.player1.kick_power
             self.world.ball.angle = self.world.player1.angle
+        ###
+        ###
+        if TWO_PLAYER:
+            if arcade.check_for_collision(self.ball_sprite, self.player2_sprite) :
+                self.world.ball.speed = self.world.player2.kick_power
+                self.world.ball.angle = self.world.player2.angle
         ###
 
     def on_key_press(self, key, key_modifiers):
