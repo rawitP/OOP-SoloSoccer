@@ -9,7 +9,8 @@ class ModelSprite(arcade.Sprite):
     def __init__(self, *args, **kwargs):
         self.model = kwargs.pop('model', None)
         super().__init__(*args, **kwargs)
-        ### FIX Start position at 0,0
+
+        # Sync Position before update() at the first time
         self.set_position(self.model.x, self.model.y)
  
     def sync_with_model(self):
@@ -24,17 +25,21 @@ class ModelSprite(arcade.Sprite):
 class SoccerWindow(arcade.Window):
     def __init__(self, width, height):
         super().__init__(width, height)
+
         # Store Backgound
         self.backgound = None
         arcade.set_background_color(arcade.color.GREEN)
 
         # Create Sprite
         self.world = World(SCREEN_WIDTH, SCREEN_HEIGHT)
-        self.player1_sprite = ModelSprite('images/player1.png',model=self.world.player1)
+        self.player1_sprite = ModelSprite('images/player1.png',
+                                           model=self.world.player1)
         self.ball_sprite = ModelSprite('images/ball.png', model=self.world.ball)
+        
         ###
         if TWO_PLAYER:
-            self.player2_sprite = ModelSprite('images/player1.png',model=self.world.player2)
+            self.player2_sprite = ModelSprite('images/player1.png',
+                                               model=self.world.player2)
         ###
 
     def setupStadium(self):
@@ -46,9 +51,16 @@ class SoccerWindow(arcade.Window):
         # Draw backgound
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
                                       SCREEN_WIDTH, SCREEN_HEIGHT, self.backgound)
+        
+        ### GOAL AREA
+        arcade.draw_lrtb_rectangle_filled(1205,1280,460,260,arcade.color.RED)
+        arcade.draw_lrtb_rectangle_filled(0,75,460,260,arcade.color.RED)
+        ###
+        
         # Draw Sprite
         self.ball_sprite.draw()
         self.player1_sprite.draw()
+
         ###
         if TWO_PLAYER:
             self.player2_sprite.draw()
@@ -57,11 +69,11 @@ class SoccerWindow(arcade.Window):
     def update(self, delta):
         # Update Object in World 
         self.world.update(delta)
-        ### When Player1 hit the ball
+        # When Player1 hit the ball
         if arcade.check_for_collision(self.ball_sprite, self.player1_sprite) :
             self.world.ball.speed = self.world.player1.kick_power
             self.world.ball.angle = self.world.player1.angle
-        ###
+        
         ###
         if TWO_PLAYER:
             if arcade.check_for_collision(self.ball_sprite, self.player2_sprite) :

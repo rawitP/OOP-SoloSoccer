@@ -4,12 +4,16 @@ import random
 
 TWO_PlAYER = False
 
+WIDTH = None
+HEIGHT = None
+
 class Ball:
     MOVE_ACC = -1
     BORDER_BOTTOM = 55
     BORDER_TOP = 665
     BORDER_LEFT = 75
     BORDER_RIGHT = 1205
+    GOAL_SIZE = 200
 
     def __init__(self, x, y, angle=0):
         self.x = x
@@ -19,33 +23,50 @@ class Ball:
         self.is_outside = False
 
     def update(self, delta):
-        # Bouncing at border
+        '''
+        Bouncing at border
+        UPDATE: Added goal area for boucing
+        ''' 
         if not self.is_outside:
-            if self.x < self.BORDER_LEFT:
+            # When ball outside line or goal
+            if (self.x < self.BORDER_LEFT and
+               (self.y > HEIGHT/2 + self.GOAL_SIZE / 2 or self.y < HEIGHT/2 - self.GOAL_SIZE / 2))\
+                    or self.x < 0 :
                 self.is_outside = True
                 if self.angle % 360 > 180:
                     self.angle = 270 + (270 - self.angle)
                 else:
                     self.angle = 90 - (self.angle - 90)
-            elif self.x > self.BORDER_RIGHT:
+            elif (self.x > self.BORDER_RIGHT and 
+                 (self.y > HEIGHT/2 + self.GOAL_SIZE / 2 or self.y < HEIGHT/2 - self.GOAL_SIZE / 2))\
+                    or self.x > 1280 :
                 self.is_outside = True
                 if self.angle % 360 > 180:
+                    print(self.angle % 360)
                     self.angle = 270 - (self.angle - 270)
+                    print(self.angle % 360)
                 else:
                     self.angle = 90 + (90 - self.angle)
-            if self.y < self.BORDER_BOTTOM:
+            if self.y < self.BORDER_BOTTOM or\
+                    (self.y < HEIGHT/2 - self.GOAL_SIZE / 2 and 
+                    (self.x < self.BORDER_LEFT or self.x > self.BORDER_RIGHT)):
+                print("y1")
                 self.is_outside = True
                 if self.angle % 360 > 270 :
                     self.angle = 90 - (self.angle - 270)
                 else:
                     self.angle = 90 + (270 - self.angle)
-            elif self.y > self.BORDER_TOP:
+            elif self.y > self.BORDER_TOP or\
+                    (self.y > HEIGHT/2 + self.GOAL_SIZE / 2 and 
+                    (self.x < self.BORDER_LEFT or self.x > self.BORDER_RIGHT)):
+                print("y2")
                 self.is_outside = True
                 if self.angle % 360 > 90:
                     self.angle = 180 + (180 - self.angle)
                 else:
                     self.angle = 360 - self.angle
         else:
+            print("Outside naja")
             if self.x > self.BORDER_LEFT or self.x < self.BORDER_RIGHT or\
                self.y > self.BORDER_BOTTOM or self.y < self.BORDER_TOP:
                 self.is_outside = False
@@ -85,6 +106,8 @@ class Player:
 class World:
 
     def __init__(self, width, height):
+        global WIDTH; WIDTH = width
+        global HEIGHT; HEIGHT = height
         self.width = width
         self.height = height
         self.player1 = Player(width // 2 * 0.5, height // 2, 0)
