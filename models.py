@@ -28,6 +28,10 @@ class Ball:
         self.x = self.prev_x
         self.y = self.prev_y
 
+    def go_speed_angle(self, speed, angle):
+        self.speed = speed
+        self.angle = angle
+
     def bounce_reverse(self):
         self.angle = self.angle + 180
 
@@ -82,14 +86,22 @@ class Player:
     def __init__(self, x, y, angle, speed=SPEED_DEFAULT):
         self.x = x
         self.y = y
+        self.prev_x = None
+        self.prev_y = None
         self.angle = angle
         self.speed = speed
         self.kick_power = self.DEFAULT_KICK_POWER
         self.is_walk = False
         self.turn_direction = [False, False] # [LEFT, RIGHT]
 
+    def prev_pos(self):
+        self.x = self.prev_x
+        self.y = self.prev_y
+
     def update(self, delta):
         if self.is_walk:
+            self.prev_x = self.x
+            self.prev_y = self.y
             self.x += math.cos(math.radians(self.angle)) * self.speed
             self.y += math.sin(math.radians(self.angle)) * self.speed
         # If it is turning

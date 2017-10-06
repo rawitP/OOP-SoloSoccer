@@ -43,8 +43,10 @@ class SoccerWindow(arcade.Window):
 
         # Create Sprite
         self.world = World(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.player_sprite_list = arcade.SpriteList()
         self.player1_sprite = ModelSprite('images/player1.png',
                                            model=self.world.player1)
+        self.player_sprite_list.append(self.player1_sprite)
         self.ball_sprite = ModelSprite('images/ball.png', model=self.world.ball)
         
         # Add Wall for bouncing
@@ -84,6 +86,7 @@ class SoccerWindow(arcade.Window):
         if TWO_PLAYER:
             self.player2_sprite = ModelSprite('images/player2.png',
                                                model=self.world.player2)
+            self.player_sprite_list.append(self.player2_sprite)
         ###
 
     def setupStadium(self):
@@ -99,23 +102,28 @@ class SoccerWindow(arcade.Window):
         # Draw Sprite
         self.wall_sprite_list.draw()
         self.ball_sprite.draw()
-        self.player1_sprite.draw()
+        for player in self.player_sprite_list:
+            player.draw()
         self.goal_area_1.draw()
         self.goal_area_2.draw()
-
-        ###
-        if TWO_PLAYER:
-            self.player2_sprite.draw()
-        ###
 
     def update(self, delta):
         # Update Object in World 
         self.world.update(delta)
         self.ball_sprite.sync_with_model()
-        # When Player1 hit the ball
-        if arcade.check_for_collision(self.ball_sprite, self.player1_sprite) :
-            self.world.ball.speed = self.world.player1.kick_power
-            self.world.ball.angle = self.world.player1.angle
+
+        # When Player hit the ball
+        for player in self.player_sprite_list:
+            if arcade.check_for_collision(player, self.ball_sprite):
+                self.world.ball.go_speed_angle(player.model.kick_power, player.model.angle)
+
+        # When Player hit the wall (Player have to stay inside border)
+        for player in self.player_sprite_list:
+            if player.model.x > SCREEN_WIDTH - GOAL_WIDTH or\
+               player.model.x < 0 + GOAL_WIDTH or\
+               player.model.y > SCREEN_HEIGHT - BORDER_SIZE or\
+               player.model.y < 0 + BORDER_SIZE:
+                player.model.prev_pos()
         
         '''
         Check For collision between ball and walls.
@@ -213,13 +221,6 @@ class SoccerWindow(arcade.Window):
                 else:
                     self.world.ball.bounce_to_top()
                 self.world.ball.prev_pos()
-
-        ###
-        if TWO_PLAYER:
-            if arcade.check_for_collision(self.ball_sprite, self.player2_sprite) :
-                self.world.ball.speed = self.world.player2.kick_power
-                self.world.ball.angle = self.world.player2.angle
-        ###
 
     def on_key_press(self, key, key_modifiers):
         self.world.on_key_press(key, key_modifiers)
