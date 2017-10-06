@@ -2,7 +2,7 @@ import math
 import arcade.key
 import random
 
-TWO_PlAYER = False
+TWO_PlAYER = True
 
 WIDTH = None
 HEIGHT = None
@@ -64,55 +64,6 @@ class Ball:
             self.angle = 0 + (180 - self.angle)
    
     def update(self, delta):
-        '''
-        Bouncing at border
-        UPDATE: Added goal area for boucing
-    
-        if not self.is_outside:
-            # When ball outside line or goal
-            if (self.x < self.BORDER_LEFT and
-               (self.y > HEIGHT/2 + self.GOAL_SIZE / 2 or self.y < HEIGHT/2 - self.GOAL_SIZE / 2))\
-                    or self.x < 0 :
-                self.is_outside = True
-                if self.angle % 360 > 180:
-                    self.angle = 270 + (270 - self.angle)
-                else:
-                    self.angle = 90 - (self.angle - 90)
-            elif (self.x > self.BORDER_RIGHT and 
-                 (self.y > HEIGHT/2 + self.GOAL_SIZE / 2 or self.y < HEIGHT/2 - self.GOAL_SIZE / 2))\
-                    or self.x > 1280 :
-                self.is_outside = True
-                if self.angle % 360 > 180:
-                    print(self.angle % 360)
-                    self.angle = 270 - (self.angle - 270)
-                    print(self.angle % 360)
-                else:
-                    self.angle = 90 + (90 - self.angle)
-            if self.y < self.BORDER_BOTTOM or\
-                    (self.y < HEIGHT/2 - self.GOAL_SIZE / 2 and 
-                    (self.x < self.BORDER_LEFT or self.x > self.BORDER_RIGHT)):
-                print("y1")
-                self.is_outside = True
-                if self.angle % 360 > 270 :
-                    self.angle = 90 - (self.angle - 270)
-                else:
-                    self.angle = 90 + (270 - self.angle)
-            elif self.y > self.BORDER_TOP or\
-                    (self.y > HEIGHT/2 + self.GOAL_SIZE / 2 and 
-                    (self.x < self.BORDER_LEFT or self.x > self.BORDER_RIGHT)):
-                print(self.x,self.y)
-                print("y2")
-                self.is_outside = True
-                if self.angle % 360 > 90:
-                    self.angle = 180 + (180 - self.angle)
-                else:
-                    self.angle = 360 - self.angle
-        else:
-            print("Outside naja")
-            if self.x > self.BORDER_LEFT or self.x < self.BORDER_RIGHT or\
-               self.y > self.BORDER_BOTTOM or self.y < self.BORDER_TOP:
-                self.is_outside = False
-        '''
         # Make it move realistic
         if self.speed > 0 :
             self.prev_x = self.x
@@ -120,100 +71,8 @@ class Ball:
             self.speed = self.speed + self.MOVE_ACC*(0.1) # v = u + at
             if self.speed < 0 :
                 self.speed = 0
-            '''
-            prev_x = self.x
-            prev_y = self.y
-            '''
             self.x += math.cos(math.radians(self.angle)) * self.speed
-            self.y += math.sin(math.radians(self.angle)) * self.speed
-            #print('Next Pos',self.x,self.y,self.angle)
-            ###
-            ###
-            '''
-            # new bouncing
-            if self.x > self.BORDER_RIGHT:
-                # OUTSTIDE GOAL 
-                if self.y > HEIGHT/2 + self.GOAL_SIZE/2 or\
-                   self.y < HEIGHT/2 - self.GOAL_SIZE/2 :
-                    self.x = prev_x
-                    self.y = prev_y
-                    print("X > BORDER, OUTSIDE GOAL")
-                    if self.angle % 360 > 180:
-                        self.angle = 270 - (self.angle - 270)
-                    else:
-                        self.angle = 90 + (90 - self.angle)
-                # INSIDE GOAL
-                elif self.x > WIDTH :
-                    self.x = prev_x
-                    self.y = prev_y
-                    print("X > BORDER, INSIDE GOAL")
-                    if self.angle % 360 > 180:
-                        self.angle = 270 - (self.angle - 270)
-                    else:
-                        self.angle = 90 + (90 - self.angle)
-            elif self.x < self.BORDER_LEFT:
-                 # OUTSTIDE GOAL
-                if self.y > HEIGHT/2 + self.GOAL_SIZE/2 or\
-                   self.y < HEIGHT/2 - self.GOAL_SIZE/2 :
-                    self.x = prev_x
-                    self.y = prev_y
-                    print("X < BORDER, OUTSIDE GOAL")
-                    if self.angle % 360 > 180:
-                        self.angle = 270 + (270 - self.angle)
-                    else:
-                        self.angle = 90 - (self.angle - 90)
-                # INSIDE GOAL
-                elif self.x < 0:
-                    self.x = prev_x
-                    self.y = prev_y
-                    print("X < BORDER, INSIDE GOAL")
-                    if self.angle % 360 > 180:
-                        self.angle = 270 + (270 - self.angle)
-                    else:
-                        self.angle = 90 - (self.angle - 90)
-            if self.y >= HEIGHT/2 + self.GOAL_SIZE/2 :
-                # INSIDE GOAL
-                if self.x <= self.BORDER_LEFT or\
-                   self.x >= self.BORDER_RIGHT :
-                    self.x = prev_x
-                    self.y = prev_y
-                    print("Y >= GOAL, INSIDE GOAL")
-                    if self.angle % 360 > 90:
-                        self.angle = 180 + (180 - self.angle)
-                    else:
-                        self.angle = 360 - self.angle
-                # OUTSIDE GOAL
-                elif self.y > self.BORDER_TOP :
-                    self.x = prev_x
-                    self.y = prev_y
-                    print("Y >= GOAL, OUTSIDE GOAL")
-                    if self.angle % 360 > 90:
-                        self.angle = 180 + (180 - self.angle)
-                    else:
-                        self.angle = 360 - self.angle
-            elif self.y <= HEIGHT/2 - self.GOAL_SIZE/2 :
-                # INSIDE GOAL
-                if self.x <= self.BORDER_LEFT or\
-                   self.x >= self.BORDER_RIGHT :
-                    self.x = prev_x
-                    self.y = prev_y
-                    print("Y <= GOAL, INSIDE GOAL")
-                    if self.angle % 360 > 270 :
-                        self.angle = 90 - (self.angle - 270)
-                    else:
-                        self.angle = 90 + (270 - self.angle)
-                # OUTSIDE GOAL
-                elif self.y < self.BORDER_BOTTOM :
-                    self.x = prev_x
-                    self.y = prev_y
-                    print("Y >= GOAL, OUTSIDE GOAL")
-                    if self.angle % 360 > 270 :
-                        self.angle = 90 - (self.angle - 270)
-                    else:
-                        self.angle = 90 + (270 - self.angle)
-            self.angle = self.angle % 360
-            print(self.x,self.y,self.angle)
-            '''        
+            self.y += math.sin(math.radians(self.angle)) * self.speed 
 
 class Player:
     TURN_SPEED = 3

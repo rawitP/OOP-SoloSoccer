@@ -6,7 +6,7 @@ SCREEN_HEIGHT = 720
 BORDER_SIZE = 50
 GOAL_WIDTH = 100
 GOAL_HEIGHT = 200
-TWO_PLAYER = False
+TWO_PLAYER = True
 
 class ModelSprite(arcade.Sprite):
     def __init__(self, *args, **kwargs):
@@ -82,7 +82,7 @@ class SoccerWindow(arcade.Window):
 
         ###
         if TWO_PLAYER:
-            self.player2_sprite = ModelSprite('images/player1.png',
+            self.player2_sprite = ModelSprite('images/player2.png',
                                                model=self.world.player2)
         ###
 
