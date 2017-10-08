@@ -110,6 +110,7 @@ class SoccerWindow(arcade.Window):
     def update(self, delta):
         # Update Object in World 
         self.world.update(delta)
+        # Sync Ball model before check collision
         self.ball_sprite.sync_with_model()
 
         # When Player hit the ball

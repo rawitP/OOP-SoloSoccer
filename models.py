@@ -9,11 +9,6 @@ HEIGHT = None
 
 class Ball:
     MOVE_ACC = -1
-    BORDER_BOTTOM = 55
-    BORDER_TOP = 665
-    BORDER_LEFT = 75
-    BORDER_RIGHT = 1205
-    GOAL_SIZE = 200
 
     def __init__(self, x, y, angle=0):
         self.x = x
@@ -21,8 +16,8 @@ class Ball:
         self.speed = 0
         self.angle = angle
         self.is_outside = False
-        self.prev_x = 0
-        self.prev_y = 0
+        self.prev_x = self.x
+        self.prev_y = self.y
 
     def prev_pos(self):
         self.x = self.prev_x
@@ -82,6 +77,7 @@ class Player:
     TURN_SPEED = 3
     SPEED_DEFAULT = 3
     DEFAULT_KICK_POWER = 7
+    COLLISION_RADIUS = 20
 
     def __init__(self, x, y, angle, speed=SPEED_DEFAULT):
         self.x = x
@@ -117,22 +113,32 @@ class World:
         global HEIGHT; HEIGHT = height
         self.width = width
         self.height = height
+        self.players = []
         self.player1 = Player(width // 2 * 0.5, height // 2, 0)
+        self.players.append(self.player1)
         self.ball = Ball(width // 2 , height // 2)
 
         ###
         if TWO_PlAYER:
             self.player2 = Player(width // 2 * 1.5, height // 2, 180)
+            self.players.append(self.player2)
         ###
  
     def update(self, delta):
-        self.player1.update(delta)
+        for player in self.players:
+            player.update(delta)
         self.ball.update(delta)
 
-        ###
-        if TWO_PlAYER:
-            self.player2.update(delta)
-        ###
+        # Check for collision between players
+        # By using distance between players
+        for player in self.players:
+            for other_player in self.players:
+                if player is not other_player:
+                    distance = math.sqrt(  ((player.x - other_player.x)**2)\
+                                         + ((player.y - other_player.y)**2) )
+                    if distance < (player.COLLISION_RADIUS +
+                                  other_player.COLLISION_RADIUS):
+                        player.prev_pos()
 
     def on_key_press(self, key, key_modifiers):
         # Player1 will walk
@@ -169,7 +175,7 @@ class World:
         if TWO_PlAYER:
             if key == arcade.key.W:
                 self.player2.is_walk = False
-            # Player1 will NOT turn
+            # Player2 will NOT turn
             if key == arcade.key.D:
                 self.player2.turn_direction[1] = False
             if key == arcade.key.A:
