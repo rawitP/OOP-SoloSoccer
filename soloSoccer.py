@@ -1,3 +1,5 @@
+# TODO: change texture location to Texture Class
+
 import arcade
 from models import World, Player
 
@@ -7,6 +9,11 @@ BORDER_SIZE = 50
 GOAL_WIDTH = 100
 GOAL_HEIGHT = 200
 TWO_PLAYER = True
+
+TEXTURES_PLAYER1 = ['images/player_blue/player0.png','images/player_blue/player1.png','images/player_blue/player2.png',
+                    'images/player_blue/player0.png','images/player_blue/player4.png','images/player_blue/player5.png']
+TEXTURES_PLAYER2 = ['images/player_red/player0.png','images/player_red/player1.png','images/player_red/player2.png',
+                    'images/player_red/player0.png','images/player_red/player4.png','images/player_red/player5.png']
 
 class ModelSprite(arcade.Sprite):
     def __init__(self, *args, **kwargs):
@@ -24,6 +31,49 @@ class ModelSprite(arcade.Sprite):
     def draw(self):
         self.sync_with_model()
         super().draw()
+
+class AnimatedPositionSprite(arcade.Sprite):
+    TEXTURE_CHANGE_DISTANCE = 20
+
+    def __init__(self, textures_locations, **kwargs):
+        self.model = kwargs.pop('model', None)
+        super().__init__(textures_locations[0], **kwargs)
+
+        # Sync Position before update() at the first time
+        self.set_position(self.model.x, self.model.y)
+
+        # Store previous position
+        self.prev_x = self.center_x
+        self.prev_y = self.center_y
+        self.distance = 0
+
+        # Store textures to textures_list
+        self.textures_list = []
+        for texture_location in textures_locations:
+            self.textures_list.append(arcade.load_texture(texture_location))
+        self.texture_change_distance = self.TEXTURE_CHANGE_DISTANCE
+ 
+    def sync_with_model(self):
+        if self.model:
+            self.set_position(self.model.x, self.model.y)
+            self.angle = self.model.angle
+ 
+    def update_animation(self):
+        if self.center_x != self.prev_x or self.center_y != self.prev_y:
+            self.prev_x = self.center_x
+            self.prev_y = self.center_y
+            self.distance  += self.model.speed
+            texture_index = (1 + self.distance//self.texture_change_distance) % len(self.textures_list)
+            self.texture = self.textures_list[texture_index]
+        else:
+            self.texture = self.textures[0]
+            self.distance = 0
+
+    def draw(self):
+        self.sync_with_model()
+        self.update_animation()
+        super().draw()
+
 
 class WallSprite(arcade.Sprite):
     def __init__(self, x, y, width, height):
@@ -44,8 +94,7 @@ class SoccerWindow(arcade.Window):
         # Create Sprite
         self.world = World(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player_sprite_list = arcade.SpriteList()
-        self.player1_sprite = ModelSprite('images/player1.png',
-                                           model=self.world.player1)
+        self.player1_sprite = AnimatedPositionSprite(TEXTURES_PLAYER1, model=self.world.player1)
         self.player_sprite_list.append(self.player1_sprite)
         self.ball_sprite = ModelSprite('images/ball.png', model=self.world.ball)
         
@@ -84,8 +133,7 @@ class SoccerWindow(arcade.Window):
 
         ###
         if TWO_PLAYER:
-            self.player2_sprite = ModelSprite('images/player2.png',
-                                               model=self.world.player2)
+            self.player2_sprite = AnimatedPositionSprite(TEXTURES_PLAYER2, model=self.world.player2)
             self.player_sprite_list.append(self.player2_sprite)
         ###
 

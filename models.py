@@ -96,6 +96,7 @@ class Player:
 
     def update(self, delta):
         if self.is_walk:
+            # Store previous position
             self.prev_x = self.x
             self.prev_y = self.y
             self.x += math.cos(math.radians(self.angle)) * self.speed
