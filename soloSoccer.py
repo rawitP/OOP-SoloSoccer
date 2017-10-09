@@ -1,6 +1,6 @@
-# TODO: change texture location to Texture Class
-
 import arcade
+# Need pyglet for drawing text.
+import pyglet
 from models import World, Player
 
 SCREEN_WIDTH = 1280
@@ -10,10 +10,12 @@ GOAL_WIDTH = 100
 GOAL_HEIGHT = 200
 TWO_PLAYER = True
 
-TEXTURES_PLAYER1 = ['images/player_blue/player0.png','images/player_blue/player1.png','images/player_blue/player2.png',
-                    'images/player_blue/player0.png','images/player_blue/player4.png','images/player_blue/player5.png']
-TEXTURES_PLAYER2 = ['images/player_red/player0.png','images/player_red/player1.png','images/player_red/player2.png',
-                    'images/player_red/player0.png','images/player_red/player4.png','images/player_red/player5.png']
+TEXTURES_PLAYER1 = ['images/player_blue/player0.png','images/player_blue/player1.png',
+                    'images/player_blue/player2.png','images/player_blue/player0.png',
+                    'images/player_blue/player4.png','images/player_blue/player5.png']
+TEXTURES_PLAYER2 = ['images/player_red/player0.png','images/player_red/player1.png',
+                    'images/player_red/player2.png','images/player_red/player0.png',
+                    'images/player_red/player4.png','images/player_red/player5.png']
 
 class ModelSprite(arcade.Sprite):
     def __init__(self, *args, **kwargs):
@@ -33,7 +35,7 @@ class ModelSprite(arcade.Sprite):
         super().draw()
 
 class AnimatedPositionSprite(arcade.Sprite):
-    TEXTURE_CHANGE_DISTANCE = 20
+    TEXTURE_CHANGE_DISTANCE = 15
 
     def __init__(self, textures_locations, **kwargs):
         self.model = kwargs.pop('model', None)
@@ -52,14 +54,17 @@ class AnimatedPositionSprite(arcade.Sprite):
         for texture_location in textures_locations:
             self.textures_list.append(arcade.load_texture(texture_location))
         self.texture_change_distance = self.TEXTURE_CHANGE_DISTANCE
- 
+
     def sync_with_model(self):
         if self.model:
             self.set_position(self.model.x, self.model.y)
             self.angle = self.model.angle
- 
+
     def update_animation(self):
+        # If not the same position, animate textures.
+        # By using interval of distance.
         if self.center_x != self.prev_x or self.center_y != self.prev_y:
+            # Store previous position before update texture
             self.prev_x = self.center_x
             self.prev_y = self.center_y
             self.distance  += self.model.speed
@@ -81,7 +86,43 @@ class WallSprite(arcade.Sprite):
         self.set_position(x, y)
         self.width = width
         self.height = height
+        # Set the wall invisble
         self.alpha = 0
+
+class ScoreText():
+    OFFSET_X = 20
+    OFFSET_Y = 50
+    SCORE_SIZE = 48
+
+    def __init__(self, **kwargs):
+        self.world = kwargs.pop('world', None)
+        self.score_team_1 = 0
+        self.score_team_2 = 0
+        self.text1 = arcade.create_text('', arcade.color.BLACK)
+        self.text2 = arcade.create_text('', arcade.color.BLACK)
+    
+    def sync_score(self):
+        self.score_team_1 = self.world.score_team_1
+        self.score_team_2 = self.world.score_team_2
+
+    def draw(self):
+        self.sync_score()
+        if self.score_team_1 != self.text1.text:
+            self.text1 = pyglet.text.Label(str(self.score_team_1),
+                                font_name=('Calibri', 'Arial'),
+                                font_size=self.SCORE_SIZE,
+                                color=(arcade.color.BLUE + (127,)),
+                                anchor_x="right",
+                                anchor_y="top")
+        if self.score_team_2 != self.text2.text:
+            self.text2 = pyglet.text.Label(str(self.score_team_2),
+                                font_name=('Calibri', 'Arial'),
+                                font_size=self.SCORE_SIZE,
+                                color=(arcade.color.RED + (127,)),
+                                anchor_x="left",
+                                anchor_y="top")
+        arcade.render_text(self.text1, SCREEN_WIDTH//2 - self.OFFSET_X, SCREEN_HEIGHT - self.OFFSET_Y)
+        arcade.render_text(self.text2, SCREEN_WIDTH//2 + self.OFFSET_X, SCREEN_HEIGHT - self.OFFSET_Y)
 
 class SoccerWindow(arcade.Window):
     def __init__(self, width, height):
@@ -98,6 +139,9 @@ class SoccerWindow(arcade.Window):
         self.player_sprite_list.append(self.player1_sprite)
         self.ball_sprite = ModelSprite('images/ball.png', model=self.world.ball)
         
+        # Create object for drawing text
+        self.score_text = ScoreText(world=self.world)
+
         # Add Wall for bouncing
         self.wall_sprite_list = arcade.SpriteList()
         self.wall_top = WallSprite(SCREEN_WIDTH//2, SCREEN_HEIGHT - BORDER_SIZE//2, 
@@ -126,10 +170,10 @@ class SoccerWindow(arcade.Window):
         self.wall_sprite_list.append(self.wall_right_outside)   
 
         # Add Goal Sprites for detect the ball
-        self.goal_area_1 = arcade.Sprite('images/goal.png')
-        self.goal_area_1.set_position(50, SCREEN_HEIGHT//2)
-        self.goal_area_2 = arcade.Sprite('images/goal.png')
-        self.goal_area_2.set_position(SCREEN_WIDTH - (GOAL_WIDTH//2), SCREEN_HEIGHT//2)
+        self.goal_1_sprite = arcade.Sprite('images/goal.png')
+        self.goal_1_sprite.set_position(self.world.goal_1.center_x, self.world.goal_1.center_y)
+        self.goal_2_sprite = arcade.Sprite('images/goal.png')
+        self.goal_2_sprite.set_position(self.world.goal_2.center_x, self.world.goal_2.center_y)
 
         ###
         if TWO_PLAYER:
@@ -149,11 +193,12 @@ class SoccerWindow(arcade.Window):
 
         # Draw Sprite
         self.wall_sprite_list.draw()
+        self.score_text.draw()
         self.ball_sprite.draw()
         for player in self.player_sprite_list:
             player.draw()
-        self.goal_area_1.draw()
-        self.goal_area_2.draw()
+        self.goal_1_sprite.draw()
+        self.goal_2_sprite.draw()     
 
     def update(self, delta):
         # Update Object in World 

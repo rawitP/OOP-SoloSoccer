@@ -1,3 +1,5 @@
+# TODO: Add score function for increasing score
+
 import math
 import arcade.key
 import random
@@ -6,16 +8,44 @@ TWO_PlAYER = True
 
 WIDTH = None
 HEIGHT = None
+GOAL_WIDTH = 100
+GOAL_HEIGHT = 200
+
+class Goal:
+    def __init__(self, x, y, width, height):
+        self.center_x = x
+        self.center_y = y
+        self.width = width
+        self.height = height
+        # Use for enable/disable counting (detecting ball)
+        self.is_counting = True
+
+    def is_ball_inside(self, ball):
+        # Every parts of ball have to stay inside goal
+        is_inside = ball.x + ball.radius <= self.center_x + self.width/2 and\
+                        ball.x - ball.radius >= self.center_x - self.width/2 and\
+                        ball.y + ball.radius <= self.center_y + self.height/2 and\
+                        ball.y - ball.radius >= self.center_y - self.height/2
+        if is_inside:            
+            if self.is_counting:
+                # Disable counting when the ball is inside.
+                self.is_counting = False
+                return True
+        else:
+            # Enable counting when ANY parts of ball is outside.
+            self.is_counting = True
+        return False
 
 class Ball:
     MOVE_ACC = -1
+    DEFAULT_RADIUS = 45/2
 
     def __init__(self, x, y, angle=0):
         self.x = x
         self.y = y
+        self.radius = self.DEFAULT_RADIUS
         self.speed = 0
         self.angle = angle
-        self.is_outside = False
         self.prev_x = self.x
         self.prev_y = self.y
 
@@ -118,6 +148,16 @@ class World:
         self.player1 = Player(width // 2 * 0.5, height // 2, 0)
         self.players.append(self.player1)
         self.ball = Ball(width // 2 , height // 2)
+        # Blue team Goal
+        self.goal_1 = Goal(GOAL_WIDTH//2, HEIGHT//2,
+                           GOAL_WIDTH, GOAL_HEIGHT)
+        # Red team Goal
+        self.goal_2 = Goal(WIDTH - (GOAL_WIDTH//2), HEIGHT//2, 
+                           GOAL_WIDTH, GOAL_HEIGHT)
+
+        # Store score
+        self.score_team_1 = 0
+        self.score_team_2 = 0
 
         ###
         if TWO_PlAYER:
@@ -131,7 +171,7 @@ class World:
         self.ball.update(delta)
 
         # Check for collision between players
-        # By using distance between players
+        # By using distance between players (Circle)
         for player in self.players:
             for other_player in self.players:
                 if player is not other_player:
@@ -141,6 +181,12 @@ class World:
                                   other_player.COLLISION_RADIUS):
                         player.prev_pos()
 
+        # Check if ball is inside goal.
+        if self.goal_1.is_ball_inside(self.ball):
+            self.score_team_2 += 1
+        elif self.goal_2.is_ball_inside(self.ball):
+            self.score_team_1 += 1
+    
     def on_key_press(self, key, key_modifiers):
         # Player1 will walk
         if key == arcade.key.UP:
@@ -155,7 +201,7 @@ class World:
         if TWO_PlAYER:
             if key == arcade.key.W:
                 self.player2.is_walk = True
-            # Player1 will turn
+            # Player2 will turn
             if key == arcade.key.D:
                 self.player2.turn_direction[1] = True
             if key == arcade.key.A:
