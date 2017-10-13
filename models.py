@@ -1,4 +1,5 @@
 # TODO: Add score function for increasing score
+# Fix Goalkeeper and control movement
 
 import math
 import arcade.key
@@ -6,8 +7,8 @@ import random
 
 TWO_PlAYER = True
 
-WIDTH = None
-HEIGHT = None
+WIDTH = 1280
+HEIGHT = 720
 GOAL_WIDTH = 100
 GOAL_HEIGHT = 200
 
@@ -17,8 +18,10 @@ class Goal:
         self.center_y = y
         self.width = width
         self.height = height
+        ''' Uncomment for using Auto Enable/Disable
         # Use for enable/disable counting (detecting ball)
         self.is_counting = True
+        '''
 
     def is_ball_inside(self, ball):
         # Every parts of ball have to stay inside goal
@@ -26,14 +29,18 @@ class Goal:
                         ball.x - ball.radius >= self.center_x - self.width/2 and\
                         ball.y + ball.radius <= self.center_y + self.height/2 and\
                         ball.y - ball.radius >= self.center_y - self.height/2
-        if is_inside:            
+        if is_inside:
+            ''' Uncomment for Auto Disable            
             if self.is_counting:
                 # Disable counting when the ball is inside.
                 self.is_counting = False
-                return True
+            '''
+            return True
         else:
+            ''' UnComment for Auto Enable
             # Enable counting when ANY parts of ball is outside.
             self.is_counting = True
+            '''
         return False
 
 class Ball:
@@ -106,17 +113,18 @@ class Ball:
 class Player:
     TURN_SPEED = 3
     SPEED_DEFAULT = 3
-    DEFAULT_KICK_POWER = 7
+    DEFAULT_KICK_POWER = 10
     COLLISION_RADIUS = 20
+    DEFAULT_KICK_RUN = 4
 
     def __init__(self, x, y, angle, speed=SPEED_DEFAULT):
         self.x = x
         self.y = y
-        self.prev_x = None
-        self.prev_y = None
+        self.prev_x = x
+        self.prev_y = y
         self.angle = angle
         self.speed = speed
-        self.kick_power = self.DEFAULT_KICK_POWER
+        self.kick_power = self.DEFAULT_KICK_RUN
         self.is_walk = False
         self.turn_direction = [False, False] # [LEFT, RIGHT]
 
@@ -137,16 +145,51 @@ class Player:
         if self.turn_direction[1]:
             self.angle -= self.TURN_SPEED
 
+class BotPlayer(Player):
+    SPEED_DEFAULT = 1
+    SIDE_RANGE = 150
+
+    def __init__(self, x, y, angle, speed=SPEED_DEFAULT):
+        super().__init__(x, y, angle, speed)
+
+    def follow_ball(self, ball):
+        if ball.y > self.y and self.y < HEIGHT//2 + self.SIDE_RANGE:
+            self.is_walk = True
+            self.angle = 90
+        elif ball.y < self.y and self.y > HEIGHT//2 - self.SIDE_RANGE:
+            self.is_walk = True
+            self.angle = 270
+        else:
+            self.angle = 0
+            self.is_walk = False
+
+    def update(self, delta, ball):
+        self.follow_ball(ball)
+        if self.is_walk:
+            # Store previous position
+            # self.prev_x = self.x
+            self.prev_y = self.y
+            # self.x += math.cos(math.radians(self.angle)) * self.speed
+            self.y += math.sin(math.radians(self.angle)) * self.speed
+            if abs(self.y - ball.y) < 1:
+                self.y = ball.y
+
 class World:
+    PLAYER_INIT_POS = [(WIDTH // 2 * 0.5, HEIGHT // 2, 0),
+                       (WIDTH // 2 * 1.5, HEIGHT // 2, 180)]
 
     def __init__(self, width, height):
-        global WIDTH; WIDTH = width
-        global HEIGHT; HEIGHT = height
+        global WIDTH
+        WIDTH = width
+        global HEIGHT
+        HEIGHT = height
         self.width = width
         self.height = height
+        self.all_players = []
         self.players = []
         self.player1 = Player(width // 2 * 0.5, height // 2, 0)
         self.players.append(self.player1)
+        self.all_players.append(self.player1)
         self.ball = Ball(width // 2 , height // 2)
         # Blue team Goal
         self.goal_1 = Goal(GOAL_WIDTH//2, HEIGHT//2,
@@ -159,21 +202,45 @@ class World:
         self.score_team_1 = 0
         self.score_team_2 = 0
 
+        self.game_status = 1 # 0 = NOT playing, 1 = playing
+
+        # Bot Player (Goalkeeper)
+        self.bot_players = []
+        self.bot_player_1 = BotPlayer(width // 2 * 0.4, height // 2, 0)
+        self.all_players.append(self.bot_player_1)
+        self.bot_players.append(self.bot_player_1)
+
         ###
         if TWO_PlAYER:
             self.player2 = Player(width // 2 * 1.5, height // 2, 180)
+            self.all_players.append(self.player2)
             self.players.append(self.player2)
         ###
  
+    def set_all_init_pos(self):
+        for player, init_pos in zip(self.players, self.PLAYER_INIT_POS):
+            player.x = init_pos[0]
+            player.y = init_pos[1]
+            player.angle = init_pos[2]
+            player.prev_x = player.x
+            player.prev_y = player.y
+        self.ball.x = WIDTH // 2
+        self.ball.y = HEIGHT // 2
+        self.ball.speed = 0
+        self.ball.angle = 0
+
     def update(self, delta):
         for player in self.players:
             player.update(delta)
         self.ball.update(delta)
 
+        for bot_player in self.bot_players:
+            bot_player.update(delta, self.ball)
+
         # Check for collision between players
         # By using distance between players (Circle)
-        for player in self.players:
-            for other_player in self.players:
+        for player in self.all_players:
+            for other_player in self.all_players:
                 if player is not other_player:
                     distance = math.sqrt(  ((player.x - other_player.x)**2)\
                                          + ((player.y - other_player.y)**2) )
@@ -182,12 +249,20 @@ class World:
                         player.prev_pos()
 
         # Check if ball is inside goal.
-        if self.goal_1.is_ball_inside(self.ball):
-            self.score_team_2 += 1
-        elif self.goal_2.is_ball_inside(self.ball):
-            self.score_team_1 += 1
+        if self.game_status == 1:
+            if self.goal_1.is_ball_inside(self.ball):
+                self.score_team_2 += 1
+                self.game_status = 0
+            elif self.goal_2.is_ball_inside(self.ball):
+                self.score_team_1 += 1
+                self.game_status = 0
     
     def on_key_press(self, key, key_modifiers):
+        # Game control
+        if key == arcade.key.R:
+            self.game_status = 1
+            self.set_all_init_pos()
+
         # Player1 will walk
         if key == arcade.key.UP:
             self.player1.is_walk = True
@@ -196,6 +271,9 @@ class World:
             self.player1.turn_direction[1] = True
         if key == arcade.key.LEFT:
             self.player1.turn_direction[0] = True
+        # Press ENter to kick the ball
+        if key == arcade.key.ENTER:
+            self.player1.kick_power = self.player1.DEFAULT_KICK_POWER
 
         ###
         if TWO_PlAYER:
@@ -217,6 +295,10 @@ class World:
             self.player1.turn_direction[1] = False
         if key == arcade.key.LEFT:
             self.player1.turn_direction[0] = False
+        # Release Enter to NOT Kick the ball
+        if key == arcade.key.ENTER:
+            self.player1.kick_power = self.player1.DEFAULT_KICK_RUN
+
 
         ###
         if TWO_PlAYER:

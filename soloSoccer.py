@@ -17,7 +17,9 @@ TEXTURES_PLAYER2 = ['images/player_red/player0.png','images/player_red/player1.p
                     'images/player_red/player2.png','images/player_red/player0.png',
                     'images/player_red/player4.png','images/player_red/player5.png']
 
+
 class ModelSprite(arcade.Sprite):
+
     def __init__(self, *args, **kwargs):
         self.model = kwargs.pop('model', None)
         super().__init__(*args, **kwargs)
@@ -33,6 +35,7 @@ class ModelSprite(arcade.Sprite):
     def draw(self):
         self.sync_with_model()
         super().draw()
+
 
 class AnimatedPositionSprite(arcade.Sprite):
     TEXTURE_CHANGE_DISTANCE = 15
@@ -68,7 +71,8 @@ class AnimatedPositionSprite(arcade.Sprite):
             self.prev_x = self.center_x
             self.prev_y = self.center_y
             self.distance  += self.model.speed
-            texture_index = (1 + self.distance//self.texture_change_distance) % len(self.textures_list)
+            texture_index = ((1 + self.distance//self.texture_change_distance) %
+                             len(self.textures_list))
             self.texture = self.textures_list[texture_index]
         else:
             self.texture = self.textures[0]
@@ -81,6 +85,7 @@ class AnimatedPositionSprite(arcade.Sprite):
 
 
 class WallSprite(arcade.Sprite):
+
     def __init__(self, x, y, width, height):
         super().__init__('images/block.png')
         self.set_position(x, y)
@@ -123,6 +128,7 @@ class ScoreText():
                                 anchor_y="top")
         arcade.render_text(self.text1, SCREEN_WIDTH//2 - self.OFFSET_X, SCREEN_HEIGHT - self.OFFSET_Y)
         arcade.render_text(self.text2, SCREEN_WIDTH//2 + self.OFFSET_X, SCREEN_HEIGHT - self.OFFSET_Y)
+
 
 class SoccerWindow(arcade.Window):
     def __init__(self, width, height):
@@ -171,13 +177,20 @@ class SoccerWindow(arcade.Window):
 
         # Add Goal Sprites for detect the ball
         self.goal_1_sprite = arcade.Sprite('images/goal.png')
-        self.goal_1_sprite.set_position(self.world.goal_1.center_x, self.world.goal_1.center_y)
+        self.goal_1_sprite.set_position(self.world.goal_1.center_x,
+                                        self.world.goal_1.center_y)
         self.goal_2_sprite = arcade.Sprite('images/goal.png')
-        self.goal_2_sprite.set_position(self.world.goal_2.center_x, self.world.goal_2.center_y)
+        self.goal_2_sprite.set_position(self.world.goal_2.center_x,
+                                        self.world.goal_2.center_y)
+
+        # Bot Player Sprite (Goalkeeper)
+        self.bot_player_1_sprite = AnimatedPositionSprite(TEXTURES_PLAYER1, model=self.world.bot_player_1)
+        self.player_sprite_list.append(self.bot_player_1_sprite)
 
         ###
         if TWO_PLAYER:
-            self.player2_sprite = AnimatedPositionSprite(TEXTURES_PLAYER2, model=self.world.player2)
+            self.player2_sprite = AnimatedPositionSprite(TEXTURES_PLAYER2,
+                                                         model=self.world.player2)
             self.player_sprite_list.append(self.player2_sprite)
         ###
 
@@ -205,18 +218,21 @@ class SoccerWindow(arcade.Window):
         self.world.update(delta)
         # Sync Ball model before check collision
         self.ball_sprite.sync_with_model()
+        for player in self.player_sprite_list:
+            player.sync_with_model()
 
         # When Player hit the ball
         for player in self.player_sprite_list:
             if arcade.check_for_collision(player, self.ball_sprite):
+                player.model.prev_pos() # Player will not walk through the ball
                 self.world.ball.go_speed_angle(player.model.kick_power, player.model.angle)
 
         # When Player hit the wall (Player have to stay inside border)
         for player in self.player_sprite_list:
-            if player.model.x > SCREEN_WIDTH - GOAL_WIDTH or\
-               player.model.x < 0 + GOAL_WIDTH or\
-               player.model.y > SCREEN_HEIGHT - BORDER_SIZE or\
-               player.model.y < 0 + BORDER_SIZE:
+            if (player.model.x > SCREEN_WIDTH - GOAL_WIDTH or
+                    player.model.x < 0 + GOAL_WIDTH or
+                    player.model.y > SCREEN_HEIGHT - BORDER_SIZE or
+                    player.model.y < 0 + BORDER_SIZE):
                 player.model.prev_pos()
         
         '''
