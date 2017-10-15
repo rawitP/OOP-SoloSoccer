@@ -13,7 +13,8 @@ GOAL_WIDTH = 100
 GOAL_HEIGHT = 200
 
 class Goal:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, team_target):
+        self.team_target = team_target # Use to indicate which team will get score
         self.center_x = x
         self.center_y = y
         self.width = width
@@ -174,9 +175,19 @@ class BotPlayer(Player):
             if abs(self.y - ball.y) < 1:
                 self.y = ball.y
 
+class Score:
+    def __init__(self):
+        self.teams_score = {}
+
+    def add_team(self, team_name):
+        self.teams_score[team_name] = 0
+
+    def increase_score(self, team_name):
+        self.teams_score[team_name] += 1
+
 class World:
-    PLAYER_INIT_POS = [(WIDTH // 2 * 0.5, HEIGHT // 2, 0),
-                       (WIDTH // 2 * 1.5, HEIGHT // 2, 180)]
+    PLAYER_INIT_POS = [(WIDTH // 2 * 0.75, HEIGHT // 2, 0),
+                       (WIDTH // 2 * 1.25, HEIGHT // 2, 180)]
 
     def __init__(self, width, height):
         global WIDTH
@@ -187,20 +198,31 @@ class World:
         self.height = height
         self.all_players = []
         self.players = []
-        self.player1 = Player(width // 2 * 0.5, height // 2, 0)
+        self.player1 = Player(width // 2 * 0.75, height // 2, 0)
         self.players.append(self.player1)
         self.all_players.append(self.player1)
         self.ball = Ball(width // 2 , height // 2)
-        # Blue team Goal
-        self.goal_1 = Goal(GOAL_WIDTH//2, HEIGHT//2,
-                           GOAL_WIDTH, GOAL_HEIGHT)
-        # Red team Goal
-        self.goal_2 = Goal(WIDTH - (GOAL_WIDTH//2), HEIGHT//2, 
-                           GOAL_WIDTH, GOAL_HEIGHT)
 
         # Store score
         self.score_team_1 = 0
         self.score_team_2 = 0
+        # New Score Class
+        self.score = Score()
+
+        '''
+        Goal Section
+        '''
+        self.goals = []
+        # Blue team Goal
+        self.goal_1 = Goal(GOAL_WIDTH//2, HEIGHT//2,
+                           GOAL_WIDTH, GOAL_HEIGHT, 'Red')
+        self.goals.append(self.goal_1)
+        # Red team Goal
+        self.goal_2 = Goal(WIDTH - (GOAL_WIDTH//2), HEIGHT//2, 
+                           GOAL_WIDTH, GOAL_HEIGHT, 'Blue')
+        self.goals.append(self.goal_2)
+        for goal in self.goals:
+            self.score.add_team(goal.team_target)
 
         self.game_status = 1 # 0 = NOT playing, 1 = playing
 
@@ -212,7 +234,7 @@ class World:
 
         ###
         if TWO_PlAYER:
-            self.player2 = Player(width // 2 * 1.5, height // 2, 180)
+            self.player2 = Player(width // 2 * 1.25, height // 2, 180)
             self.all_players.append(self.player2)
             self.players.append(self.player2)
         ###
@@ -250,13 +272,12 @@ class World:
 
         # Check if ball is inside goal.
         if self.game_status == 1:
-            if self.goal_1.is_ball_inside(self.ball):
-                self.score_team_2 += 1
-                self.game_status = 0
-            elif self.goal_2.is_ball_inside(self.ball):
-                self.score_team_1 += 1
-                self.game_status = 0
-    
+            for goal in self.goals:
+                if goal.is_ball_inside(self.ball):
+                    self.score.increase_score(goal.team_target)
+                    self.game_status = 0
+                    break
+
     def on_key_press(self, key, key_modifiers):
         # Game control
         if key == arcade.key.R:
@@ -298,7 +319,6 @@ class World:
         # Release Enter to NOT Kick the ball
         if key == arcade.key.ENTER:
             self.player1.kick_power = self.player1.DEFAULT_KICK_RUN
-
 
         ###
         if TWO_PlAYER:

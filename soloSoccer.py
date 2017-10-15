@@ -107,8 +107,8 @@ class ScoreText():
         self.text2 = arcade.create_text('', arcade.color.BLACK)
     
     def sync_score(self):
-        self.score_team_1 = self.world.score_team_1
-        self.score_team_2 = self.world.score_team_2
+        self.score_team_1 = self.world.score.teams_score['Blue']
+        self.score_team_2 = self.world.score.teams_score['Red']
 
     def draw(self):
         self.sync_score()
