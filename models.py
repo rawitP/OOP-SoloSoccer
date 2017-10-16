@@ -12,6 +12,8 @@ HEIGHT = 720
 GOAL_WIDTH = 100
 GOAL_HEIGHT = 200
 
+MAX_SCORE = 3
+
 class Goal:
     def __init__(self, x, y, width, height, team_target):
         self.team_target = team_target # Use to indicate which team will get score
@@ -178,12 +180,26 @@ class BotPlayer(Player):
 class Score:
     def __init__(self):
         self.teams_score = {}
+        self.team_winner = ''
 
     def add_team(self, team_name):
         self.teams_score[team_name] = 0
 
+    def check_winner(self):
+        for team in self.teams_score.keys():
+            print(team)
+            if self.teams_score[team] == MAX_SCORE:
+                self.team_winner = team
+                break
+
     def increase_score(self, team_name):
         self.teams_score[team_name] += 1
+        self.check_winner()
+
+    def reset_score(self):
+        self.team_winner = ''
+        for team in self.teams_score.keys():
+            self.teams_score[team] = 0
 
 class World:
     PLAYER_INIT_POS = [(WIDTH // 2 * 0.75, HEIGHT // 2, 0),
@@ -281,6 +297,8 @@ class World:
     def on_key_press(self, key, key_modifiers):
         # Game control
         if key == arcade.key.R:
+            if self.score.team_winner != '':
+                self.score.reset_score()
             self.game_status = 1
             self.set_all_init_pos()
 

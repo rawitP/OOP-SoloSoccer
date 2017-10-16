@@ -103,12 +103,15 @@ class ScoreText():
         self.world = kwargs.pop('world', None)
         self.score_team_1 = 0
         self.score_team_2 = 0
+        self.team_winner = ''
         self.text1 = arcade.create_text('', arcade.color.BLACK)
         self.text2 = arcade.create_text('', arcade.color.BLACK)
+        self.text_winner = arcade.create_text('', arcade.color.BLACK)
     
     def sync_score(self):
         self.score_team_1 = self.world.score.teams_score['Blue']
         self.score_team_2 = self.world.score.teams_score['Red']
+        self.team_winner = self.world.score.team_winner
 
     def draw(self):
         self.sync_score()
@@ -126,8 +129,16 @@ class ScoreText():
                                 color=(arcade.color.RED + (127,)),
                                 anchor_x="left",
                                 anchor_y="top")
+        if self.team_winner != self.text_winner.text:
+            self.text_winner = pyglet.text.Label(str(self.team_winner),
+                                font_name=('Calibri', 'Arial'),
+                                font_size=self.SCORE_SIZE,
+                                color=(arcade.color.BLACK + (127,)),
+                                anchor_x="center",
+                                anchor_y="center")
         arcade.render_text(self.text1, SCREEN_WIDTH//2 - self.OFFSET_X, SCREEN_HEIGHT - self.OFFSET_Y)
         arcade.render_text(self.text2, SCREEN_WIDTH//2 + self.OFFSET_X, SCREEN_HEIGHT - self.OFFSET_Y)
+        arcade.render_text(self.text_winner, SCREEN_WIDTH//2 , SCREEN_HEIGHT // 2)
 
 
 class SoccerWindow(arcade.Window):
