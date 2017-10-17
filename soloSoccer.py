@@ -1,5 +1,5 @@
 import arcade
-# Need pyglet for drawing text.
+# Need pyglet for drawing text option.
 import pyglet
 from models import World, Player
 
@@ -71,7 +71,7 @@ class AnimatedPositionSprite(arcade.Sprite):
             self.prev_x = self.center_x
             self.prev_y = self.center_y
             self.distance  += self.model.speed
-            texture_index = ((1 + self.distance//self.texture_change_distance) %
+            texture_index = ((1 + int(self.distance//self.texture_change_distance)) %
                              len(self.textures_list))
             self.texture = self.textures_list[texture_index]
         else:
@@ -92,7 +92,7 @@ class WallSprite(arcade.Sprite):
         self.width = width
         self.height = height
         # Set the wall invisble
-        self.alpha = 0
+        self.alpha = 0 # 0 = invisible, 1 = visible
 
 class ScoreText():
     OFFSET_X = 20
@@ -130,14 +130,16 @@ class ScoreText():
                                 anchor_x="left",
                                 anchor_y="top")
         if self.team_winner != self.text_winner.text:
-            self.text_winner = pyglet.text.Label(str(self.team_winner),
+            self.text_winner = pyglet.text.Label(str(self.team_winner + ' is winner'),
                                 font_name=('Calibri', 'Arial'),
                                 font_size=self.SCORE_SIZE,
-                                color=(arcade.color.BLACK + (127,)),
+                                color=(arcade.color.BLACK + (255,)),
                                 anchor_x="center",
                                 anchor_y="center")
-        arcade.render_text(self.text1, SCREEN_WIDTH//2 - self.OFFSET_X, SCREEN_HEIGHT - self.OFFSET_Y)
-        arcade.render_text(self.text2, SCREEN_WIDTH//2 + self.OFFSET_X, SCREEN_HEIGHT - self.OFFSET_Y)
+        arcade.render_text(self.text1, SCREEN_WIDTH//2 - self.OFFSET_X,
+                                       SCREEN_HEIGHT - self.OFFSET_Y)
+        arcade.render_text(self.text2, SCREEN_WIDTH//2 + self.OFFSET_X,
+                                       SCREEN_HEIGHT - self.OFFSET_Y)
         arcade.render_text(self.text_winner, SCREEN_WIDTH//2 , SCREEN_HEIGHT // 2)
 
 
@@ -152,7 +154,8 @@ class SoccerWindow(arcade.Window):
         # Create Sprite
         self.world = World(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player_sprite_list = arcade.SpriteList()
-        self.player1_sprite = AnimatedPositionSprite(TEXTURES_PLAYER1, model=self.world.player1)
+        self.player1_sprite = AnimatedPositionSprite(TEXTURES_PLAYER1,
+                                                     model=self.world.player1)
         self.player_sprite_list.append(self.player1_sprite)
         self.ball_sprite = ModelSprite('images/ball.png', model=self.world.ball)
         
@@ -165,15 +168,15 @@ class SoccerWindow(arcade.Window):
                                    SCREEN_WIDTH, BORDER_SIZE)
         self.wall_bottom = WallSprite(SCREEN_WIDTH//2, 0 + BORDER_SIZE//2, 
                                       SCREEN_WIDTH, BORDER_SIZE)
-        self.wall_left_top = WallSprite(GOAL_WIDTH//2, SCREEN_HEIGHT//2*2.25,
+        self.wall_left_top = WallSprite(GOAL_WIDTH//2, SCREEN_HEIGHT//2 + GOAL_HEIGHT/2 + SCREEN_HEIGHT//2,
                                         GOAL_WIDTH, SCREEN_HEIGHT)
-        self.wall_left_bottom = WallSprite(GOAL_WIDTH//2, SCREEN_HEIGHT//2*-0.25,
+        self.wall_left_bottom = WallSprite(GOAL_WIDTH//2, SCREEN_HEIGHT//2 - GOAL_HEIGHT/2 - SCREEN_HEIGHT//2,
                                            GOAL_WIDTH, SCREEN_HEIGHT)
         self.wall_left_outside = WallSprite(-BORDER_SIZE//2, SCREEN_HEIGHT//2,
                                              BORDER_SIZE, SCREEN_HEIGHT)
-        self.wall_right_top = WallSprite(SCREEN_WIDTH - GOAL_WIDTH//2, SCREEN_HEIGHT//2*2.25,
+        self.wall_right_top = WallSprite(SCREEN_WIDTH - GOAL_WIDTH//2, SCREEN_HEIGHT//2 + GOAL_HEIGHT/2 + SCREEN_HEIGHT//2,
                                          GOAL_WIDTH, SCREEN_HEIGHT)
-        self.wall_right_bottom = WallSprite(SCREEN_WIDTH - GOAL_WIDTH//2, SCREEN_HEIGHT//2*-0.25,
+        self.wall_right_bottom = WallSprite(SCREEN_WIDTH - GOAL_WIDTH//2, SCREEN_HEIGHT//2 - GOAL_HEIGHT/2 - SCREEN_HEIGHT//2,
                                             GOAL_WIDTH, SCREEN_HEIGHT)
         self.wall_right_outside = WallSprite(SCREEN_WIDTH + BORDER_SIZE//2, SCREEN_HEIGHT//2,
                                              BORDER_SIZE, SCREEN_HEIGHT)
@@ -195,8 +198,12 @@ class SoccerWindow(arcade.Window):
                                         self.world.goal_2.center_y)
 
         # Bot Player Sprite (Goalkeeper)
-        self.bot_player_1_sprite = AnimatedPositionSprite(TEXTURES_PLAYER1, model=self.world.bot_player_1)
+        self.bot_player_1_sprite = AnimatedPositionSprite(TEXTURES_PLAYER1,
+                                                          model=self.world.bot_player_1)
         self.player_sprite_list.append(self.bot_player_1_sprite)
+        self.bot_player_2_sprite = AnimatedPositionSprite(TEXTURES_PLAYER2,
+                                                          model=self.world.bot_player_2)
+        self.player_sprite_list.append(self.bot_player_2_sprite)
 
         ###
         if TWO_PLAYER:
@@ -355,6 +362,6 @@ def main():
     # Setup to field
     window.setupStadium()
     arcade.run()
- 
+
 if __name__ == '__main__':
     main()
