@@ -203,25 +203,45 @@ class BotPlayer(Player):
 class Score:
     def __init__(self):
         self.teams_score = {}
-        self.team_winner = ''
 
     def add_team(self, team_name):
         self.teams_score[team_name] = 0
 
-    def check_winner(self):
+    def check_winner(self, check_score):
         for team in self.teams_score.keys():
-            if self.teams_score[team] == MAX_SCORE:
-                self.team_winner = team
-                break
+            if self.teams_score[team] == check_score:
+                return team
+        return ''
 
     def increase_score(self, team_name):
         self.teams_score[team_name] += 1
-        self.check_winner()
 
     def reset_score(self):
-        self.team_winner = ''
         for team in self.teams_score.keys():
             self.teams_score[team] = 0
+
+
+class Timer():
+    ON = 1
+    OFF = 0
+
+    def __init__(self):
+        self.time = 0
+        self.status = self.OFF
+
+    def set_status(self, status):
+        self.status = status
+
+    def get_time(self):
+        return int(self.time)
+
+    def reset(self):
+        self.time = 0
+
+    def update(self, delta):
+        if self.status == self.ON: 
+            self.time += delta
+
 
 class World:
     PLAYER_INIT_POS = ((WIDTH // 2 * 0.75, HEIGHT // 2, 0),
@@ -254,12 +274,13 @@ class World:
             self.players.append(self.player2)
         ###
  
-
-        # Store score
-        self.score_team_1 = 0
-        self.score_team_2 = 0
         # New Score Class
         self.score = Score()
+        self.team_winner = ''
+
+        # Create Timer
+        self.timer = Timer()
+        self.timer.set_status(Timer.ON)
 
         '''
         Goal Section
@@ -288,12 +309,21 @@ class World:
         self.bot_players.append(self.bot_player_2)
 
     def set_all_init_pos(self):
+        # Set player positioin
         for player, init_pos in zip(self.players, self.PLAYER_INIT_POS):
             player.x = init_pos[0]
             player.y = init_pos[1]
             player.angle = init_pos[2]
             player.prev_x = player.x
             player.prev_y = player.y
+        # Set Bot position
+        for bot, init_pos in zip(self.bot_players, self.BOT_INIT_POS):
+            bot.x = init_pos[0]
+            bot.y = init_pos[1]
+            bot.angle = init_pos[2]
+            bot.prev_x = bot.x
+            bot.prev_y = bot.y
+        # Set ball position
         self.ball.x = WIDTH // 2
         self.ball.y = HEIGHT // 2
         self.ball.speed = 0
@@ -318,18 +348,25 @@ class World:
                                   other_player.COLLISION_RADIUS):
                         player.prev_pos()
 
-        # Check if ball is inside goal.
+        # If game still running
         if self.game_status == 1:
+            # Update timer
+            self.timer.update(delta)
+             # Check if ball is inside goal.
             for goal in self.goals:
                 if goal.is_ball_inside(self.ball):
                     self.score.increase_score(goal.team_target)
+                    self.team_winner = self.score.check_winner(MAX_SCORE)
                     self.game_status = 0
                     break
+
+
 
     def on_key_press(self, key, key_modifiers):
         # Game control
         if key == arcade.key.R:
-            if self.score.team_winner != '':
+            if self.team_winner != '':
+                self.team_winner = ''
                 self.score.reset_score()
             self.game_status = 1
             self.set_all_init_pos()
