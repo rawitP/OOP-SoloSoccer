@@ -122,15 +122,17 @@ class Text():
     TEXT_COLOR = arcade.color.BLACK
     ALPHA = 127
 
-    def __init__(self, x, y, **kwargs):
-        self.text_obj = kwargs.pop('text_obj', None)
+    def __init__(self, x, y, text_obj):
+        self.text_obj = text_obj
         self.val = ''
         self.text = arcade.create_text('', arcade.color.BLACK)
         self.x = x
         self.y = y
 
+    # Need to fix how to sync it
     def sync(self):
         self.val = self.text_obj
+        print(self.text_obj)
 
     def draw(self):
         self.sync()
@@ -141,7 +143,39 @@ class Text():
                                 color=(TEXT_COLOR + (ALPHA,)),
                                 anchor_x="center",
                                 anchor_y="center")
+        else:
+            print('False')
         arcade.render_text(self.text, self.x, self.y)
+
+
+class ResultText():
+    SIZE = 48
+    TEXT_COLOR = arcade.color.BLACK
+    ALPHA = 255
+
+    def __init__(self, x, y, **kwargs):
+        self.world = kwargs.pop('world', None)
+        self.val = ''
+        self.text = arcade.create_text('', arcade.color.BLACK)
+        self.x = x
+        self.y = y
+
+    def sync(self):
+        self.val = self.world.team_winner
+
+    def draw(self):
+        self.sync()
+        if self.text.text != self.val:
+            if self.val != 'Draw' and self.val != '':
+                self.val = '{0} is winner'.format(self.val)
+            self.text = pyglet.text.Label(str(self.val),
+                                font_name=('Calibri', 'Arial'),
+                                font_size=ResultText.SIZE,
+                                color=(ResultText.TEXT_COLOR + (ResultText.ALPHA,)),
+                                anchor_x="center",
+                                anchor_y="center")
+        arcade.render_text(self.text, self.x, self.y)
+
 
 class ScoreText():
     OFFSET_X = 20
@@ -213,7 +247,7 @@ class SoccerWindow(arcade.Window):
         # Create object for drawing text
         self.score_text = ScoreText(world=self.world)
         self.time_text = TimerText(timer=self.world.timer)
-        self.winner_text = Text(SCREEN_WIDTH//2, SCREEN_HEIGHT//2, text_obj=self.world.team_winner)
+        self.result_text = ResultText(SCREEN_WIDTH//2, SCREEN_HEIGHT//2, world=self.world)
 
         # Add Wall for bouncing
         self.wall_sprite_list = arcade.SpriteList()
@@ -286,7 +320,7 @@ class SoccerWindow(arcade.Window):
         self.goal_2_sprite.draw()
 
         # Draw Winner
-        self.winner_text.draw()     
+        self.result_text.draw()     
 
     def update(self, delta):
         # Update Object in World 

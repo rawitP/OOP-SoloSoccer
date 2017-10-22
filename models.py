@@ -13,6 +13,7 @@ GOAL_WIDTH = 100
 GOAL_HEIGHT = 200
 
 MAX_SCORE = 3
+MAX_TIME = 5
 
 class Goal:
     def __init__(self, x, y, width, height, team_target):
@@ -213,6 +214,18 @@ class Score:
                 return team
         return ''
 
+    def check_most(self):
+        max = -1
+        team = ''
+        for cur_team in self.teams_score.keys():
+            if self.teams_score[cur_team] > max:
+                max = self.teams_score[cur_team]
+                team = cur_team
+            elif self.teams_score[cur_team] == max:
+                team = 'Draw'
+        return team
+
+
     def increase_score(self, team_name):
         self.teams_score[team_name] += 1
 
@@ -224,23 +237,37 @@ class Score:
 class Timer():
     ON = 1
     OFF = 0
+    COUNTDOWN_TYPE = 1
+    CLOCK_TYPE = 0
 
     def __init__(self):
         self.time = 0
-        self.status = self.OFF
+        self.status = Timer.OFF
+        self.timer_type = Timer.CLOCK_TYPE
+
+    def set_to_countdown(self, start_second):
+        self.timer_type = Timer.COUNTDOWN_TYPE
+        self.time = start_second
 
     def set_status(self, status):
         self.status = status
 
+    def set_time(self, time):
+        self.time = time
+
     def get_time(self):
-        return int(self.time)
+        return int(round(self.time))
 
     def reset(self):
-        self.time = 0
+        self.timer_type = Timer.CLOCK_TYPE
+        self.set_time(0)
 
     def update(self, delta):
         if self.status == self.ON: 
-            self.time += delta
+            if self.timer_type == Timer.CLOCK_TYPE:
+                self.time += delta
+            elif self.timer_type == Timer.COUNTDOWN_TYPE:
+                self.time -= delta
 
 
 class World:
@@ -281,6 +308,7 @@ class World:
         # Create Timer
         self.timer = Timer()
         self.timer.set_status(Timer.ON)
+        self.timer.set_to_countdown(MAX_TIME)
 
         '''
         Goal Section
@@ -352,21 +380,25 @@ class World:
         if self.game_status == 1:
             # Update timer
             self.timer.update(delta)
-             # Check if ball is inside goal.
+            # Check if ball is inside goal.
             for goal in self.goals:
                 if goal.is_ball_inside(self.ball):
                     self.score.increase_score(goal.team_target)
                     self.team_winner = self.score.check_winner(MAX_SCORE)
                     self.game_status = 0
                     break
-
-
+            # If timeout
+            if self.timer.get_time() == 0:
+                self.timer.set_time(0)
+                self.team_winner = self.score.check_most()
+                self.game_status = 0
 
     def on_key_press(self, key, key_modifiers):
         # Game control
         if key == arcade.key.R:
             if self.team_winner != '':
                 self.team_winner = ''
+                self.timer.set_to_countdown(MAX_TIME)
                 self.score.reset_score()
             self.game_status = 1
             self.set_all_init_pos()
