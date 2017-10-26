@@ -13,7 +13,7 @@ GOAL_WIDTH = 100
 GOAL_HEIGHT = 200
 
 MAX_SCORE = 3
-MAX_TIME = 5
+MAX_TIME = 60
 
 class Goal:
     def __init__(self, x, y, width, height, team_target):
@@ -275,6 +275,9 @@ class World:
                        (WIDTH // 2 * 1.25, HEIGHT // 2, 180))
     BOT_INIT_POS = ((WIDTH // 2 * 0.22, HEIGHT // 2, 0),
                        (WIDTH // 2 * 1.78, HEIGHT // 2, 180))
+    PLAYING_STATUS = 1
+    NOT_PLAYING_STATUS = 0
+    TITLE_STATUS = 2
 
     def __init__(self, width, height):
         global WIDTH
@@ -283,7 +286,7 @@ class World:
         HEIGHT = height
         self.width = width
         self.height = height
-        self.game_status = 1 # 0 = NOT playing, 1 = playing
+        self.game_status = World.TITLE_STATUS # 0 = NOT playing, 1 = playing
 
         # Player models
         self.all_players = []
@@ -358,6 +361,10 @@ class World:
         self.ball.angle = 0
 
     def update(self, delta):
+        # Models will not update when game_status = 0,1
+        if self.game_status not in [World.PLAYING_STATUS,World.NOT_PLAYING_STATUS]:
+            return
+
         for player in self.players:
             player.update(delta)
         self.ball.update(delta)
@@ -394,8 +401,14 @@ class World:
                 self.game_status = 0
 
     def on_key_press(self, key, key_modifiers):
+        # Press Enter to Play Game
+        if self.game_status not in [World.PLAYING_STATUS,World.NOT_PLAYING_STATUS]:
+            if key == arcade.key.ENTER:
+                self.game_status = 0
+            return
+
         # Game control
-        if key == arcade.key.R:
+        if key == arcade.key.R and self.game_status == 0:
             if self.team_winner != '':
                 self.team_winner = ''
                 self.timer.set_to_countdown(MAX_TIME)

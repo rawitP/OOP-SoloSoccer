@@ -150,7 +150,7 @@ class Text():
 
 class ResultText():
     SIZE = 48
-    TEXT_COLOR = arcade.color.BLACK
+    TEXT_COLOR = arcade.color.WHITE_SMOKE
     ALPHA = 255
 
     def __init__(self, x, y, **kwargs):
@@ -234,6 +234,7 @@ class SoccerWindow(arcade.Window):
 
         # Store Backgound
         self.backgound = None
+        self.title_backgound = arcade.load_texture('images/title.jpg')
         arcade.set_background_color(arcade.color.GREEN)
 
         # Create Sprite
@@ -303,8 +304,21 @@ class SoccerWindow(arcade.Window):
         # Set Backgound to field
         self.backgound = arcade.load_texture("images/field.png")
 
+    def is_draw_title(self):
+        if self.world.game_status == World.TITLE_STATUS:
+            return True
+        return False
+
+
     def on_draw(self):
         arcade.start_render()
+
+        # If it can draw Title screen
+        if self.is_draw_title() == True:
+            arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
+                                      SCREEN_WIDTH, SCREEN_HEIGHT, self.title_backgound)
+            return
+
         # Draw backgound
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
                                       SCREEN_WIDTH, SCREEN_HEIGHT, self.backgound)
