@@ -5,8 +5,6 @@ import math
 import arcade.key
 import random
 
-TWO_PlAYER = True
-
 WIDTH = 1280
 HEIGHT = 720
 GOAL_WIDTH = 100
@@ -297,11 +295,10 @@ class World:
         self.all_players.append(self.player1)
         self.ball = Ball(width // 2 , height // 2)
         ###
-        if TWO_PlAYER:
-            self.player2 = Player(self.PLAYER_INIT_POS[1][0], self.PLAYER_INIT_POS[1][1],
-                                  self.PLAYER_INIT_POS[1][2])
-            self.all_players.append(self.player2)
-            self.players.append(self.player2)
+        self.player2 = Player(self.PLAYER_INIT_POS[1][0], self.PLAYER_INIT_POS[1][1],
+                                self.PLAYER_INIT_POS[1][2])
+        self.all_players.append(self.player2)
+        self.players.append(self.player2)
         ###
  
         # New Score Class
@@ -404,7 +401,7 @@ class World:
         # Press Enter to Play Game
         if self.game_status not in [World.PLAYING_STATUS,World.NOT_PLAYING_STATUS]:
             if key == arcade.key.ENTER:
-                self.game_status = 0
+                self.game_status = 1
             return
 
         # Game control
@@ -429,17 +426,16 @@ class World:
             self.player1.set_kick(True)
 
         ###
-        if TWO_PlAYER:
-            if key == arcade.key.UP:
-                self.player2.is_walk = True
-            # Player2 will turn
-            if key == arcade.key.RIGHT:
-                self.player2.turn_direction[1] = True
-            if key == arcade.key.LEFT:
-                self.player2.turn_direction[0] = True
-            # Press ENter to kick the ball
-            if key == arcade.key.RCTRL:
-                self.player2.set_kick(True)
+        if key == arcade.key.UP:
+            self.player2.is_walk = True
+        # Player2 will turn
+        if key == arcade.key.RIGHT:
+            self.player2.turn_direction[1] = True
+        if key == arcade.key.LEFT:
+            self.player2.turn_direction[0] = True
+        # Press ENter to kick the ball
+        if key == arcade.key.RCTRL:
+            self.player2.set_kick(True)
         ###
 
     def on_key_release(self, key, key_modifiers):
@@ -456,15 +452,14 @@ class World:
             self.player1.set_kick(False)
 
         ###
-        if TWO_PlAYER:
-            if key == arcade.key.UP:
-                self.player2.is_walk = False
-            # Player2 will NOT turn
-            if key == arcade.key.RIGHT:
-                self.player2.turn_direction[1] = False
-            if key == arcade.key.LEFT:
-                self.player2.turn_direction[0] = False
-            # Release Enter to NOT Kick the ball
-            if key == arcade.key.RCTRL:
-                self.player2.set_kick(False)
+        if key == arcade.key.UP:
+            self.player2.is_walk = False
+        # Player2 will NOT turn
+        if key == arcade.key.RIGHT:
+            self.player2.turn_direction[1] = False
+        if key == arcade.key.LEFT:
+            self.player2.turn_direction[0] = False
+        # Release Enter to NOT Kick the ball
+        if key == arcade.key.RCTRL:
+            self.player2.set_kick(False)
         ###

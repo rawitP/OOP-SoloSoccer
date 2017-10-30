@@ -8,7 +8,6 @@ SCREEN_HEIGHT = 720
 BORDER_SIZE = 50
 GOAL_WIDTH = 100
 GOAL_HEIGHT = 200
-TWO_PLAYER = True
 
 TEXTURES_PLAYER1 = ['images/player_blue/player0.png','images/player_blue/player1.png',
                     'images/player_blue/player2.png','images/player_blue/player0.png',
@@ -294,10 +293,9 @@ class SoccerWindow(arcade.Window):
         self.player_sprite_list.append(self.bot_player_2_sprite)
 
         ###
-        if TWO_PLAYER:
-            self.player2_sprite = AnimatedPositionSprite(TEXTURES_PLAYER2,
-                                                         model=self.world.player2)
-            self.player_sprite_list.append(self.player2_sprite)
+        self.player2_sprite = AnimatedPositionSprite(TEXTURES_PLAYER2,
+                                                     model=self.world.player2)
+        self.player_sprite_list.append(self.player2_sprite)
         ###
 
     def setupStadium(self):
