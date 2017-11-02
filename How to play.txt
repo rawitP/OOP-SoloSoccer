@@ -1,0 +1,15 @@
+Multiplayer (2 players)
+
+Press R when ball inside the goal.
+
+Player One (Blue)
+W - Walk
+A - Turn left
+D - Turn right
+Space(hold) - Kick
+
+Player Two (Red)
+Up - Walk
+Left - Turn left
+Right - Turn right
+Right Control(hold) - Kick
